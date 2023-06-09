@@ -5,12 +5,11 @@ namespace CombtasExam.DTOs
 {
     public class InterfaceModel
     {
-        [AllowNull]
         public DateTime? Date { get; set; }
 
         [MaxLength(100)]
         public string? Expense { get; set; }
-
+        
         public decimal? Amount { get; set; }
 
         [MaxLength(3)]

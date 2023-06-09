@@ -1,6 +1,5 @@
 ﻿using CombtasExam.DTOs;
 using CombtasExam.Services.Contracts;
-using System.Linq;
 
 namespace CombtasExam.Services.Contexts
 {
@@ -13,13 +12,13 @@ namespace CombtasExam.Services.Contexts
             {
                 result.Messages.Add(ValidateExpense(parameter.Expense));
                 result.Messages.Add(ValidateOCC(parameter.OCC));
-                result.Messages.Add(ValidateAmount(parameter.Amount.Value));
-                result.Messages.Add(ValidateDate(parameter.Date.Value));
+                result.Messages.Add(ValidateDate(parameter.Date));
+                result.Messages.Add(ValidateAmount(parameter.Amount));
 
-                result.Decision = (result.Messages.Count(t => t.Equals("Good")) == 4) ? "OK!" : "FAIL!";
+                result.Decision = (result.Messages.Count(t => t.Contains("Good")) == 4) ? "OK!" : "FAIL!";
                 RemoveSuccessValidation(result);
             }
-            catch (Exception)
+            catch (InvalidOperationException ex)
             {
                 result.Decision = "FAIL!";
                 RemoveSuccessValidation(result);
@@ -31,32 +30,39 @@ namespace CombtasExam.Services.Contexts
 
         public string ValidateExpense(string expense)
         {
-            return !string.IsNullOrEmpty(expense) ? "Good" : "Expense is Mandatory!";
+            return !string.IsNullOrEmpty(expense) ? "Expense Validation : Good" : "Expense Validation : Expense is Mandatory!";
         }
 
-        public string ValidateAmount(decimal amt)
+        public string ValidateAmount(decimal? amt)
         {
-            return amt > 0M ? "Good" : "Amount must be greater than 0!";
+            if (amt == null)
+                return "Amount Validation : Amount is mandatory!";
+
+            return amt.HasValue && amt > 0M ? "Amount Validation : Good" : "Amount Validation : Amount must be greater than 0!";
         }
 
-        public string ValidateDate(DateTime date)
+        public string ValidateDate(DateTime? date)
         {
-            if (date <= DateTime.Now.Date)
-                return "Date should be at least ONE year from today!";
+            if (date == null)
+                return "Date Validation : Date is mandatory!";
 
-            return "Good";
+            if (date.HasValue && date <= DateTime.Now.Date)
+                return "Date Validation : Date should be at least ONE year from today!";
+
+            return "Date Validation : Good";
+
         }
 
         public string ValidateOCC(string occ)
         {
             string[] allowed = new string[] { "USD", "EUR", "GBP", "PHP" };
             if (string.IsNullOrEmpty(occ))
-                return "OCC is mandatory!";
+                return "OCC Validation : OCC is mandatory!";
 
             if (!allowed.Contains(occ.ToUpper()))
-                return "Unknown OCC!";
+                return "OCC Validation : Unknown OCC!";
 
-            return "Good";
+            return "OCC Validation : Good";
         }
 
         public void RemoveSuccessValidation(ValidationError error)
